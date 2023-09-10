@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/samsorrahman/golang-rest-backend/database"
+	"github.com/samsorrahman/golang-rest-backend/models"
 	"go.mongodb.org/mongo-driver/bson"
 
 	// "go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,9 +37,16 @@ func GetOrders() gin.HandlerFunc {
 
 func GetOrder() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// c.JSON(200, gin.H{
-		// 	"message": "Get Order",
-		// })
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		orderId := c.Param("order_id")
+		var order models.Order
+
+		err := orderCollection.FindOne(ctx, bson.M{"order_id": orderId}).Decode(&order)
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while fetching the orders"})
+		}
+		c.JSON(http.StatusOK, order)
 	}
 }
 
